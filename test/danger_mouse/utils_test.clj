@@ -21,3 +21,40 @@
          (sut/collect-results-map [(dm-schema/as-error 1)
                                    (dm-schema/as-success 2)
                                    3]))))
+
+(deftest flatten-test
+  (is (= (dm-schema/as-success 1)
+         (sut/flatten 1)))
+  (is (= (dm-schema/as-error 1)
+         (sut/flatten (dm-schema/as-error 1))))
+  (is (= (dm-schema/as-error 1)
+         (sut/flatten (-> 1 dm-schema/as-error dm-schema/as-error))))
+  (is (= (dm-schema/as-error 1)
+         (sut/flatten (-> 1
+                          dm-schema/as-error
+                          dm-schema/as-error
+                          dm-schema/as-error))))
+  (is (= (dm-schema/as-success 1)
+         (sut/flatten (dm-schema/as-success 1))))
+  (is (= (dm-schema/as-success 1)
+         (sut/flatten (-> 1 dm-schema/as-success dm-schema/as-success))))
+  (is (= (dm-schema/as-success 1)
+         (sut/flatten (-> 1
+                          dm-schema/as-success
+                          dm-schema/as-success
+                          dm-schema/as-success))))
+  (is (= (dm-schema/as-error 1)
+         (sut/flatten (-> 1
+                          dm-schema/as-success
+                          dm-schema/as-error
+                          dm-schema/as-success))))
+  (is (= (dm-schema/as-error 1)
+         (sut/flatten (-> 1
+                          dm-schema/as-success
+                          dm-schema/as-success
+                          dm-schema/as-error))))
+  (is (= (dm-schema/as-error 1)
+         (sut/flatten (-> 1
+                          dm-schema/as-error
+                          dm-schema/as-success
+                          dm-schema/as-error)))))
