@@ -37,4 +37,4 @@
 
 (schema/defn as-success :- SuccessResult
   [x :- schema/Any]
-  (::success x))
+  {::success x})
