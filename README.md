@@ -20,7 +20,7 @@ Error handling for processing pipelines of information in Clojure.
 
 MIT License
 
-Copyright © 2021 Michael Anderson
+Copyright © 2021-2023 Michael Anderson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
