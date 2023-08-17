@@ -4,10 +4,15 @@
 
 (schema/defn collect-results-map :- dm-schema/GroupedResults
   [xs :- [dm-schema/Result]]
-  (->> xs
-       (group-by dm-schema/result-status)
-       (map (fn [[k vs]] [k (map dm-schema/get-result vs)]))
-       (into {})))
+  (loop [[{::dm-schema/keys [error success] :as y} & ys :as all] xs
+         errors (transient [])
+         successes (transient [])]
+    (cond
+      (empty? all) {::dm-schema/error (persistent! errors)
+                    ::dm-schema/success (persistent! successes)}
+      error (recur ys (conj! errors error) successes)
+      success (recur ys errors (conj! successes success))
+      :else (recur ys errors (conj! successes y)))))
 
 (schema/defn flatten :- dm-schema/Result
   [x]

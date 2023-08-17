@@ -4,15 +4,19 @@
             [danger-mouse.schema :as dm-schema]))
 
 (deftest collect-results-map-test
-  (is (= {}
+  (is (= {::dm-schema/error []
+          ::dm-schema/success []}
          (sut/collect-results-map [])))
-  (is (= {::dm-schema/success [1 2 3]}
+  (is (= {::dm-schema/success [1 2 3]
+          ::dm-schema/error []}
          (sut/collect-results-map [1 2 3])))
-  (is (= {::dm-schema/success [1 2 3]}
+  (is (= {::dm-schema/success [1 2 3]
+          ::dm-schema/error []}
          (sut/collect-results-map [(dm-schema/as-success 1)
                                    (dm-schema/as-success 2)
                                    (dm-schema/as-success 3)])))
-  (is (= {::dm-schema/error [1 2 3]}
+  (is (= {::dm-schema/error [1 2 3]
+          ::dm-schema/success []}
          (sut/collect-results-map [(dm-schema/as-error 1)
                                    (dm-schema/as-error 2)
                                    (dm-schema/as-error 3)])))
