@@ -1,40 +1,40 @@
 (ns danger-mouse.schema
-  (:require [schema.core :as schema]))
+  (:require [schema.core :as s]))
 
-(schema/defschema ErrorResult
-  {::error schema/Any})
+(s/defschema ErrorResult
+  {::error s/Any})
 
-(schema/defschema SuccessResult
-  {::success schema/Any})
+(s/defschema SuccessResult
+  {::success s/Any})
 
-(schema/defschema Result
-  (schema/cond-pre ErrorResult SuccessResult))
+(s/defschema Result
+  (s/cond-pre ErrorResult SuccessResult))
 
-(schema/defschema GroupedResults
-  {::error [schema/Any]
-   ::success [schema/Any]})
+(s/defschema GroupedResults
+  {::error [s/Any]
+   ::success [s/Any]})
 
-(schema/defschema ResultType
-  (schema/enum ::error ::success))
+(s/defschema ResultType
+  (s/enum ::error ::success))
 
-(schema/defn result-status :- ResultType
+(s/defn result-status :- ResultType
   [{::keys [error success]}]
   (cond
     error ::error
     success ::success
     :else ::success))
 
-(schema/defn get-result :- schema/Any
+(s/defn get-result :- s/Any
   [{::keys [error success] :as x}]
   (cond
     error error
     success success
     :else x))
 
-(schema/defn as-error :- ErrorResult
-  [x :- schema/Any]
+(s/defn as-error :- ErrorResult
+  [x :- s/Any]
   {::error x})
 
-(schema/defn as-success :- SuccessResult
-  [x :- schema/Any]
+(s/defn as-success :- SuccessResult
+  [x :- s/Any]
   {::success x})

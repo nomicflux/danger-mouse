@@ -1,8 +1,8 @@
 (ns danger-mouse.utils
   (:require [danger-mouse.schema :as dm-schema]
-            [schema.core :as schema]))
+            [schema.core :as s]))
 
-(schema/defn collect-results-map :- dm-schema/GroupedResults
+(s/defn collect-results-map :- dm-schema/GroupedResults
   [xs :- [dm-schema/Result]]
   (loop [[{::dm-schema/keys [error success] :as y} & ys :as all] xs
          errors (transient [])
@@ -14,7 +14,7 @@
       success (recur ys errors (conj! successes success))
       :else (recur ys errors (conj! successes y)))))
 
-(schema/defn flatten :- dm-schema/Result
+(s/defn flatten :- dm-schema/Result
   [x]
   (loop [{::dm-schema/keys [error success] :as y} x
          errored false]
