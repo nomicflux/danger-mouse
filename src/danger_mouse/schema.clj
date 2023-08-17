@@ -11,8 +11,8 @@
   (s/cond-pre ErrorResult SuccessResult))
 
 (s/defschema GroupedResults
-  {::error [s/Any]
-   ::success [s/Any]})
+  {::errors [s/Any]
+   ::successes [s/Any]})
 
 (s/defschema ResultType
   (s/enum ::error ::success))
