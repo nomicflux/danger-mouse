@@ -10,7 +10,7 @@
       ([] (next))
       ([result] (next result))
       ([result input]
-       (utils/resolve-result
+       (utils/resolve
         (fn [error] (handler error) result)
         (fn [success] (next result success))
         input)))))
@@ -22,7 +22,11 @@
       ([] (next))
       ([result] (next result))
       ([result input]
-       (utils/resolve-result
+       (utils/resolve
         (fn [error] (next result (dm-schema/as-error error)))
         (fn [success] ((xf next) result success))
-        (utils/normalize input))))))
+        input)))))
+
+(defn chain
+  [& xfs]
+  (apply comp (map carry-errors-xf xfs)))

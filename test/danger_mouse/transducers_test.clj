@@ -11,7 +11,7 @@
       (is (= [2 3]
              (into []
                    (comp (sut/handle-errors-xf handler) (map inc))
-                   [(dm-schema/as-success 1) (dm-schema/as-success 2)])))
+                   [1 2])))
       (is (= []
              (persistent! errors)))))
   (testing "all successes last"
@@ -20,7 +20,7 @@
       (is (= [2 3]
              (into []
                    (comp (map (partial utils/on-success inc)) (sut/handle-errors-xf handler))
-                   [(dm-schema/as-success 1) (dm-schema/as-success 2)])))
+                   [1 2])))
       (is (= []
              (persistent! errors)))))
 
@@ -49,7 +49,7 @@
       (is (= [3]
              (into []
                    (comp (sut/handle-errors-xf handler) (map inc))
-                   [(dm-schema/as-error 1) (dm-schema/as-success 2)])))
+                   [(dm-schema/as-error 1) 2])))
       (is (= [1]
              (persistent! errors)))))
   (testing "mixed last"
@@ -58,7 +58,7 @@
       (is (= [3]
              (into []
                    (comp (map (partial utils/on-success inc)) (sut/handle-errors-xf handler))
-                   [(dm-schema/as-error 1) (dm-schema/as-success 2)])))
+                   [(dm-schema/as-error 1) 2])))
       (is (= [1]
              (persistent! errors)))))
 
@@ -68,7 +68,7 @@
       (is (= [2]
              (into []
                    (comp (map (fn [n] (if (even? n)
-                                       (dm-schema/as-success n)
+                                       n
                                        (dm-schema/as-error n))))
                          (sut/handle-errors-xf handler))
                    [1 2])))
@@ -83,7 +83,7 @@
     (is (= [2 3]
            (into [] (into []
                           (sut/carry-errors-xf (map inc))
-                          [(dm-schema/as-success 1) (dm-schema/as-success 2)])))))
+                          [1 2])))))
   (testing "works with errors"
     (is (= [(dm-schema/as-error 1) (dm-schema/as-error 2)]
            (into [] (into []
@@ -93,10 +93,10 @@
     (is (= [2 (dm-schema/as-error 2) (dm-schema/as-error 3)]
            (into [] (into []
                           (sut/carry-errors-xf (comp (map inc) (filter even?)))
-                          [(dm-schema/as-success 1)
+                          [1
                            (dm-schema/as-error 2)
                            (dm-schema/as-error 3)
-                           (dm-schema/as-success 4)]))))
+                           4]))))
     (is (= [(dm-schema/as-error 2)
                            (dm-schema/as-error 2)
                            (dm-schema/as-error 3)
@@ -105,10 +105,26 @@
                           (sut/carry-errors-xf (comp (map inc)
                                                      (map (fn [x] (if (even? x)
                                                                    (dm-schema/as-error x)
-                                                                   (dm-schema/as-success x))))
+                                                                   x)))
                                                      (sut/carry-errors-xf (map (partial * 10)))))
-                          [(dm-schema/as-success 1)
+                          [1
                            (dm-schema/as-error 2)
                            (dm-schema/as-error 3)
-                           (dm-schema/as-success 4)]))))
-    ))
+                           4]))))))
+
+
+(deftest chain-test
+  (is (= [(dm-schema/as-error 2)
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+            50]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (map (fn [x] (if (even? x)
+                                                    (dm-schema/as-error x)
+                                                    x)))
+                                     (map (partial * 10)))
+                          [1
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           4])))))

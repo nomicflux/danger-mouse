@@ -3,74 +3,45 @@
             [schema.core :as s]))
 
 (s/defn collect-results-map :- dm-schema/GroupedResults
-  [xs :- [dm-schema/Result]]
-  (loop [[{::dm-schema/keys [error success] :as y} & ys :as all] xs
+  [xs :- [s/Any]]
+  (loop [[y & ys :as all] xs
          errors (transient [])
          successes (transient [])]
     (cond
       (empty? all) {::dm-schema/errors (persistent! errors)
                     ::dm-schema/successes (persistent! successes)}
-      error (recur ys (conj! errors error) successes)
-      success (recur ys errors (conj! successes success))
+      (dm-schema/is-error? y) (recur ys (conj! errors (::dm-schema/error y)) successes)
       :else (recur ys errors (conj! successes y)))))
 
-(s/defn normalize :- dm-schema/Result
-  [x]
-  (loop [{::dm-schema/keys [error success] :as y} x
-         errored false]
-    (cond
-      error (recur error true)
-      success (recur success errored)
-      :else (if errored
-              (dm-schema/as-error y)
-              (dm-schema/as-success y)))))
-
-(s/defn on-success :- dm-schema/Result
+(defn on-success
   [success-fn
-   {::dm-schema/keys [success] :as result} :- dm-schema/Result]
-  (if success
-    {::dm-schema/success (success-fn success)}
-    result))
+   result]
+  (if (dm-schema/is-error? result)
+    result
+    (success-fn result)))
 
-(def ^:const fmap on-success)
-(def ^:const map-r on-success)
-
-(s/defn on-error :- dm-schema/Result
+(defn on-error
   [error-fn
-   {::dm-schema/keys [error] :as result} :- dm-schema/Result]
-  (if error
-    {::dm-schema/error (error-fn error)}
+   result]
+  (if (dm-schema/is-error? result)
+    (dm-schema/as-error (error-fn (dm-schema/get-error result)))
     result))
 
-(def ^:const map-l on-error)
-
-(s/defn on-error-and-success :- dm-schema/Result
+(defn on-error-and-success
   [error-fn
    success-fn
-   {::dm-schema/keys [success error]} :- dm-schema/Result]
-  (if success
-    {::dm-schema/success (success-fn success)}
-    {::dm-schema/error (error-fn error)}))
+   result]
+  (if (dm-schema/is-error? result)
+    (dm-schema/as-error (error-fn (dm-schema/get-error result)))
+    (success-fn result)))
 
-(def ^:const bimap on-error-and-success)
-
-(s/defn resolve-result :- s/Any
+(defn resolve
   [error-fn
    success-fn
-   {::dm-schema/keys [success error] :as result} :- s/Any]
-  (cond
-    error   (error-fn error)
-    success (success-fn success)
-    :else   (success-fn result)))
-
-(s/defn and-then :- dm-schema/Result
-  [new-result-fn
-   {::dm-schema/keys [success] :as result} :- dm-schema/Result]
-  (if success
-    (new-result-fn success)
-    result))
-
-(def ^:const flat-map and-then)
+   result]
+  (if (dm-schema/is-error? result)
+    (error-fn (dm-schema/get-error result))
+    (success-fn result)))
 
 (s/defn handle-errors :- [s/Any]
   [handler :- (s/=> (s/named (s/eq nil) 'Unit) [s/Any])
@@ -78,9 +49,9 @@
   (handler errors)
   successes)
 
-(s/defn try-catch* :- dm-schema/Result
+(s/defn try-catch*
   [thunk :- (s/=> s/Any)]
   (try
-    {::dm-schema/success (thunk)}
+    (thunk)
     (catch Exception e
       {::dm-schema/error e})))
