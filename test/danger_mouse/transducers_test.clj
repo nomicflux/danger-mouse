@@ -98,8 +98,8 @@
                            (dm-schema/as-error 3)
                            4]))))
     (is (= [(dm-schema/as-error 2)
-                           (dm-schema/as-error 2)
-                           (dm-schema/as-error 3)
+            (dm-schema/as-error 2)
+            (dm-schema/as-error 3)
             50]
            (into [] (into []
                           (sut/carry-errors-xf (comp (map inc)
@@ -115,16 +115,16 @@
 
 (deftest chain-test
   (is (= [(dm-schema/as-error 2)
-                           (dm-schema/as-error 2)
-                           (dm-schema/as-error 3)
-            50]
-           (into [] (into []
-                          (sut/chain (map inc)
-                                     (map (fn [x] (if (even? x)
-                                                    (dm-schema/as-error x)
-                                                    x)))
-                                     (map (partial * 10)))
-                          [1
-                           (dm-schema/as-error 2)
-                           (dm-schema/as-error 3)
-                           4])))))
+          (dm-schema/as-error 2)
+          (dm-schema/as-error 3)
+          50]
+         (into [] (into []
+                        (sut/chain (map inc)
+                                   (map (fn [x] (if (even? x)
+                                                 (dm-schema/as-error x)
+                                                 x)))
+                                   (map (partial * 10)))
+                        [1
+                         (dm-schema/as-error 2)
+                         (dm-schema/as-error 3)
+                         4])))))
