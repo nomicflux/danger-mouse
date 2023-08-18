@@ -54,6 +54,15 @@
 
 (def ^:const bimap on-error-and-success)
 
+(s/defn resolve-result :- s/Any
+  [error-fn
+   success-fn
+   {::dm-schema/keys [success error] :as result} :- s/Any]
+  (cond
+    error   (error-fn error)
+    success (success-fn success)
+    :else   (success-fn result)))
+
 (s/defn and-then :- dm-schema/Result
   [new-result-fn
    {::dm-schema/keys [success] :as result} :- dm-schema/Result]
