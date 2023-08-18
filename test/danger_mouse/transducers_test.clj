@@ -74,3 +74,41 @@
                    [1 2])))
       (is (= [1]
              (persistent! errors))))))
+
+(deftest carry-errors-xf-test
+  (testing "works with plain values"
+    (is (= [2 3 4]
+           (into [] (into [] (sut/carry-errors-xf (map inc)) [1 2 3])))))
+  (testing "works with successes"
+    (is (= [2 3]
+           (into [] (into []
+                          (sut/carry-errors-xf (map inc))
+                          [(dm-schema/as-success 1) (dm-schema/as-success 2)])))))
+  (testing "works with errors"
+    (is (= [(dm-schema/as-error 1) (dm-schema/as-error 2)]
+           (into [] (into []
+                          (sut/carry-errors-xf (map inc))
+                          [(dm-schema/as-error 1) (dm-schema/as-error 2)])))))
+  (testing "works with multiple xfs"
+    (is (= [2 (dm-schema/as-error 2) (dm-schema/as-error 3)]
+           (into [] (into []
+                          (sut/carry-errors-xf (comp (map inc) (filter even?)))
+                          [(dm-schema/as-success 1)
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           (dm-schema/as-success 4)]))))
+    (is (= [(dm-schema/as-error 2)
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+            50]
+           (into [] (into []
+                          (sut/carry-errors-xf (comp (map inc)
+                                                     (map (fn [x] (if (even? x)
+                                                                   (dm-schema/as-error x)
+                                                                   (dm-schema/as-success x))))
+                                                     (sut/carry-errors-xf (map (partial * 10)))))
+                          [(dm-schema/as-success 1)
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           (dm-schema/as-success 4)]))))
+    ))
