@@ -143,10 +143,10 @@
            4])))
   (is (= {:errors [2]
           :successes [10 30]}
-         ((sut/collect (map inc)
-                       (map (fn [x] (if (even? x)
-                                     (dm-schema/as-error x)
-                                     x)))
-                       (take 2)
-                       (map (partial * 10)))
-          (vec (range 10))))))
+         (let [collector (sut/collect (map inc)
+                                      (map (fn [x] (if (even? x)
+                                                    (dm-schema/as-error x)
+                                                    x)))
+                                      (take 2)
+                                      (map (partial * 10)))]
+           (collector (vec (range 10)))))))

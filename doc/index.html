@@ -2866,9 +2866,12 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="http://example.com/FIXME">danger-mouse</a></h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>FIXME: write description</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.10.1</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">1.4.1</td></tr><tr><td class="dep-name">criterium</td><td class="dotted"><hr /></td><td class="dep-version">0.4.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#danger-mouse.catch-errors">danger-mouse.catch-errors</a></li><li><a href="#danger-mouse.transducers">danger-mouse.transducers</a></li><li><a href="#danger-mouse.schema">danger-mouse.schema</a></li><li><a href="#danger-mouse.utils">danger-mouse.utils</a></li><li><a href="#danger-mouse.threading">danger-mouse.threading</a></li><li><a href="#danger-mouse.macros">danger-mouse.macros</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.catch-errors" name="danger-mouse.catch-errors"><h1 class="project-name">danger-mouse.catch-errors</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn catch-errors []
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.10.1</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">1.4.1</td></tr><tr><td class="dep-name">criterium</td><td class="dotted"><hr /></td><td class="dep-version">0.4.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#danger-mouse.catch-errors">danger-mouse.catch-errors</a></li><li><a href="#danger-mouse.transducers">danger-mouse.transducers</a></li><li><a href="#danger-mouse.schema">danger-mouse.schema</a></li><li><a href="#danger-mouse.utils">danger-mouse.utils</a></li><li><a href="#danger-mouse.threading">danger-mouse.threading</a></li><li><a href="#danger-mouse.macros">danger-mouse.macros</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.catch-errors" name="danger-mouse.catch-errors"><h1 class="project-name">danger-mouse.catch-errors</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Transducer Error Handling</h1>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs"><p>Transducer to catch errors, capture additional info, and cache them as
+   DM errors in a side channel that will be returned at the end of the reduction.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn catch-errors
+  []
   (fn [rf]
     (let [errors (volatile! [])]
       (fn
@@ -2878,32 +2881,26 @@ net.brehaut.ClojureTools = (function (SH) {
         ([result input] (try (rf result input)
                              (catch Exception e
                                (vswap! errors conj {:error-msg (.getMessage e)
-                                                    ;; :error e
+                                                    :error e
                                                     :input input})
-                               result)))))))</pre></td></tr><tr><td class="docs">
+                               result)))))))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;
   [coll &amp; args]
-  (transduce (apply comp (catch-errors) args) conj [] coll))</pre></td></tr><tr><td class="docs">
+  (transduce (apply comp (catch-errors) args) conj [] coll))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
+   a transducer.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn transduce-&gt;
   [coll xform initial &amp; args]
-  (transduce (apply comp (catch-errors) args) xform initial coll))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(comp
- (fn [r]
-   (fn [x i]
-     (r x (inc i))))
- (fn [s]
-   (fn [y j]
-     (s y #(* j 10)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(fn [s]
-  (fn [x i]
-    ((fn [y j] (s y #(* j 10))) x (inc i))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(fn [s]
-  (fn [x i]
-    (s x #(* (inc i) 10))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.transducers" name="danger-mouse.transducers"><h1 class="project-name">danger-mouse.transducers</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  (transduce (apply comp (catch-errors) args) xform initial coll))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.transducers" name="danger-mouse.transducers"><h1 class="project-name">danger-mouse.transducers</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Error Handling Transducers</h1>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.transducers
   (:require [danger-mouse.utils :as utils]
             [schema.core :as s]
-            [danger-mouse.schema :as dm-schema]))</pre></td></tr><tr><td class="docs">
+            [danger-mouse.schema :as dm-schema]))</pre></td></tr><tr><td class="docs"><h2>Transducers</h2>
+
+<p>Caution, these functions are all experimental and do not always act as intended
+depending on the transducers applied.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Handle errors as part of the transduction process via <code>handler</code>, removing them
+   from later stages.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn handle-errors-xf
   [handler]
   (fn [rf]
@@ -2914,7 +2911,8 @@ net.brehaut.ClojureTools = (function (SH) {
        (utils/resolve
         (fn [error] (handler error) result)
         (fn [success] (rf result success))
-        input)))))</pre></td></tr><tr><td class="docs">
+        input)))))</pre></td></tr><tr><td class="docs"><p>Tranducer transformer that takes an existing transducer <code>xf</code>, and applies it to
+   unmarked values while using <code>handler</code> to deal with and remove errored values.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn handle-and-continue-xf
   [handler xf]
   (fn [rf]
@@ -2925,7 +2923,7 @@ net.brehaut.ClojureTools = (function (SH) {
        (utils/resolve
         (fn [error] (handler error) result)
         (fn [success] ((xf rf) result success))
-        input)))))</pre></td></tr><tr><td class="docs">
+        input)))))</pre></td></tr><tr><td class="docs"><p>Propogates errors as errors, and otherwise applies the marked transducer <code>xf</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn carry-errors-xf
   [xf]
   (fn [rf]
@@ -2936,11 +2934,17 @@ net.brehaut.ClojureTools = (function (SH) {
        (utils/resolve
         (fn [error] (rf result (dm-schema/as-error error)))
         (fn [success] ((xf rf) result success))
-        input)))))</pre></td></tr><tr><td class="docs">
+        input)))))</pre></td></tr><tr><td class="docs"><h2>Transducer Helper Functions</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Takes a splat of transducers <code>xfs</code> and wraps them to carry errors forward and
+   otherwise act on values as normal. As no grouping is necessary, this can be used
+   on arbitrary collections, including streams and infinite lists.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn chain
   [&amp; xfs]
   (apply comp (map carry-errors-xf xfs)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defn collect :- dm-schema/GroupedResults
+  &quot;Takes a splat of transducers `xfs`. Any errors encountered will be thrown
+   into a side channel `errors` and returned as part of a `GroupedResults`.
+   Blocks until transduction is complete, so not appropriate for streaming.&quot;
   [&amp; xfs]
   (fn [coll]
     (let [errors (transient [])
@@ -2950,27 +2954,40 @@ net.brehaut.ClojureTools = (function (SH) {
                           (apply comp (interleave (cons handler xfs) (repeat handler)))
                           coll)]
       {:errors (persistent! errors)
-       :successes successes})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.schema" name="danger-mouse.schema"><h1 class="project-name">danger-mouse.schema</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+       :successes successes})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.schema" name="danger-mouse.schema"><h1 class="project-name">danger-mouse.schema</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Schemas & Functions for them</h1>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.schema
-  (:require [schema.core :as s]))</pre></td></tr><tr><td class="docs">
+  (:require [schema.core :as s]))</pre></td></tr><tr><td class="docs"><h2>Schemas</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defschema ErrorResult
   {::error s/Any})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defschema GroupedResults
   {:errors [s/Any]
-   :successes [s/Any]})</pre></td></tr><tr><td class="docs">
+   :successes [s/Any]})</pre></td></tr><tr><td class="docs"><h2>Schema Utility Functions</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defn as-error :- ErrorResult
+  &quot;Format any value as an error.
+   Preferable to using the keyword manually, but the tools in utils are preferred
+   over explicitly creating errors.&quot;
   [x :- s/Any]
   {::error x})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defn is-error? :- s/Bool
+  &quot;Check whether a value is an error.
+   Preferable to checking the keyword manually.&quot;
   [{::keys [error]}]
-  (not (not error)))</pre></td></tr><tr><td class="docs">
+  (not (not error)))</pre></td></tr><tr><td class="docs"><p>Retrieve error value, which can be an Any (not necessarily an exception).
+   Preferable to destructuring manually.</p>
 </td><td class="codes"><pre class="brush: clojure">(s/defn get-error
   [{::keys [error]}]
-  error)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.utils" name="danger-mouse.utils"><h1 class="project-name">danger-mouse.utils</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  error)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.utils" name="danger-mouse.utils"><h1 class="project-name">danger-mouse.utils</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Utility Functions</h1>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.utils
   (:require [danger-mouse.schema :as dm-schema]
-            [schema.core :as s]))</pre></td></tr><tr><td class="docs">
+            [schema.core :as s]))</pre></td></tr><tr><td class="docs"><h2>Collection Helper</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defn collect-results-map :- dm-schema/GroupedResults
+  &quot;Separate out errors and successes from a vector argument and return them
+   in a map.&quot;
   [xs :- [s/Any]]
   (loop [[y &amp; ys :as all] xs
          errors (transient [])
@@ -2979,38 +2996,45 @@ net.brehaut.ClojureTools = (function (SH) {
       (empty? all) {:errors (persistent! errors)
                     :successes (persistent! successes)}
       (dm-schema/is-error? y) (recur ys (conj! errors (dm-schema/get-error y)) successes)
-      :else (recur ys errors (conj! successes y)))))</pre></td></tr><tr><td class="docs">
+      :else (recur ys errors (conj! successes y)))))</pre></td></tr><tr><td class="docs"><h2>Mapping functions</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Only apply <code>success-fn</code> to a successful (i.e. unmarked) <code>result</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn on-success
   [success-fn
    result]
   (if (dm-schema/is-error? result)
     result
-    (success-fn result)))</pre></td></tr><tr><td class="docs">
+    (success-fn result)))</pre></td></tr><tr><td class="docs"><p>Only apply <code>error-fn</code> to an error <code>result</code> (one marked with the appropriate keyword).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn on-error
   [error-fn
    result]
   (if (dm-schema/is-error? result)
     (dm-schema/as-error (error-fn (dm-schema/get-error result)))
-    result))</pre></td></tr><tr><td class="docs">
+    result))</pre></td></tr><tr><td class="docs"><p>Apply <code>error-fn</code> if the <code>result</code> is an error, and otherwise apply <code>success-fn</code>.
+   Unlike <code>resolve</code>, this leaves an error as an error.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn on-error-and-success
   [error-fn
    success-fn
    result]
   (if (dm-schema/is-error? result)
     (dm-schema/as-error (error-fn (dm-schema/get-error result)))
-    (success-fn result)))</pre></td></tr><tr><td class="docs">
+    (success-fn result)))</pre></td></tr><tr><td class="docs"><p>Apply <code>error-fn</code> to the error value if <code>result</code> is an error, otherwise apply <code>success-fn</code>.
+   Unlike <code>on-error-and-success</code>, this will allow the user to transform an error into a success.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn resolve
   [error-fn
    success-fn
    result]
   (if (dm-schema/is-error? result)
     (error-fn (dm-schema/get-error result))
-    (success-fn result)))</pre></td></tr><tr><td class="docs">
+    (success-fn result)))</pre></td></tr><tr><td class="docs"><h2>Error handling functions</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(s/defn handle-errors :- [s/Any]
+  &quot;After using `collect-results-map` to group values, this function will handle the `errors`
+   portion using `handler` (which only produces side effects) and returns only the `successes`.&quot;
   [handler :- (s/=&gt; (s/named (s/eq nil) 'Unit) [s/Any])
    {:keys [errors successes]} :- dm-schema/GroupedResults]
   (handler errors)
-  successes)</pre></td></tr><tr><td class="docs">
+  successes)</pre></td></tr><tr><td class="docs"><p>Function version of a try-catch block. The body must be provided as a thunk to delay processing.
+   Macro version in <code>danger-mouse.macros#try-catch</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(s/defn try-catch*
   [thunk :- (s/=&gt; s/Any)]
   (try
@@ -3019,9 +3043,10 @@ net.brehaut.ClojureTools = (function (SH) {
       {::dm-schema/error e})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.threading" name="danger-mouse.threading"><h1 class="project-name">danger-mouse.threading</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.threading
   (:require [danger-mouse.schema :as dm-schema]
-            [schema.core :as s]))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.macros" name="danger-mouse.macros"><h1 class="project-name">danger-mouse.macros</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+            [schema.core :as s]))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.macros" name="danger-mouse.macros"><h1 class="project-name">danger-mouse.macros</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Macros</h1>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.macros
-  (:require [danger-mouse.utils :as utils]))</pre></td></tr><tr><td class="docs">
+  (:require [danger-mouse.utils :as utils]))</pre></td></tr><tr><td class="docs"><p>A try-catch block in function form. Uses a macro to delay resolution of the <code>body</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro try-catch
   [&amp; body]
   `(utils/try-catch* (fn [] ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_danger-mouse.catch-errors">danger-mouse.catch-errors</li><li class="floating-toc-li" id="floating-toc_danger-mouse.transducers">danger-mouse.transducers</li><li class="floating-toc-li" id="floating-toc_danger-mouse.schema">danger-mouse.schema</li><li class="floating-toc-li" id="floating-toc_danger-mouse.utils">danger-mouse.utils</li><li class="floating-toc-li" id="floating-toc_danger-mouse.threading">danger-mouse.threading</li><li class="floating-toc-li" id="floating-toc_danger-mouse.macros">danger-mouse.macros</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;

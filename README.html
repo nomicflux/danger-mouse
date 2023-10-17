@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>README.html</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml;charset=utf-8"/>
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"  />
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"  /><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'><style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style><script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script><script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script><script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>
+</head>
+
+<body>
+
+<h1 id="danger-mouse">danger-mouse</h1>
+<p>Error handling for processing pipelines of information in Clojure.</p>
+<h2 id="usage">Usage</h2>
+<p>Capturing errors for reporting while continuing to process data:</p>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(danger-mouse.catch-errors/catch-errors-&gt; [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>]
+  (<span class="kw">map</span> <span class="kw">inc</span>)
+  (<span class="kw">map</span> #(<span class="kw">if</span> (<span class="kw">even?</span> %) % (<span class="kw">throw</span> (Exception. (<span class="kw">str</span> %)))))
+  (<span class="kw">map</span> #(<span class="kw">*</span> % <span class="dv">10</span>)))
+
+<span class="kw">&gt;</span> {<span class="kw">:result</span> [<span class="dv">20</span> <span class="dv">40</span>]
+   <span class="kw">:errors</span> [{<span class="kw">:error-msg</span> <span class="st">&quot;3&quot;</span>
+             <span class="kw">:input</span> <span class="dv">2</span>
+             <span class="kw">:error</span> ....}]}</code></pre></div>
+<p>Using <code>try-catch</code> as a function, then apply different functions over errors and successes:</p>
+<div class="sourceCode"><pre class="sourceCode clojure"><code class="sourceCode clojure">(<span class="kw">-&gt;&gt;</span> (danger-mouse.macros/try-catch (<span class="kw">throw</span> (Exception. <span class="st">&quot;Oops&quot;</span>)))
+     (danger-mouse.utils/resolve ex-message <span class="kw">str</span>))
+
+<span class="kw">&gt;</span> <span class="st">&quot;Oops&quot;</span>
+
+(<span class="kw">-&gt;&gt;</span> (danger-mouse.macros/try-catch <span class="dv">1</span>)
+     (danger-mouse.utils/resolve ex-message <span class="kw">str</span>))
+
+<span class="kw">&gt;</span> <span class="st">&quot;1&quot;</span></code></pre></div>
+<h2 id="license">License</h2>
+<p>MIT License</p>
+<p>Copyright © 2021-2023 Michael Anderson</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+</body>
+</html>
