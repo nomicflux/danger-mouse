@@ -4,24 +4,24 @@
             [danger-mouse.schema :as dm-schema]))
 
 (deftest collect-results-map-test
-  (is (= {::dm-schema/errors []
-          ::dm-schema/successes []}
+  (is (= {:errors []
+          :successes []}
          (sut/collect-results-map [])))
-  (is (= {::dm-schema/successes [1 2 3]
-          ::dm-schema/errors []}
+  (is (= {:successes [1 2 3]
+          :errors []}
          (sut/collect-results-map [1 2 3])))
-  (is (= {::dm-schema/successes [1 2 3]
-          ::dm-schema/errors []}
+  (is (= {:successes [1 2 3]
+          :errors []}
          (sut/collect-results-map [1
                                    2
                                    3])))
-  (is (= {::dm-schema/errors [1 2 3]
-          ::dm-schema/successes []}
+  (is (= {:errors [1 2 3]
+          :successes []}
          (sut/collect-results-map [(dm-schema/as-error 1)
                                    (dm-schema/as-error 2)
                                    (dm-schema/as-error 3)])))
-  (is (= {::dm-schema/errors [1]
-          ::dm-schema/successes [2 3]}
+  (is (= {:errors [1]
+          :successes [2 3]}
          (sut/collect-results-map [(dm-schema/as-error 1)
                                    2
                                    3]))))
@@ -30,8 +30,8 @@
   (is (= 1
          (sut/try-catch* (fn [] 1))))
   (is (= {::dm-schema/error ["oops" {:data :something}]}
-         (-> (sut/try-catch* (fn [] (throw (ex-info "oops" {:data :something}))))
-             (update ::dm-schema/error (juxt ex-message ex-data))))))
+         (->> (sut/try-catch* (fn [] (throw (ex-info "oops" {:data :something}))))
+              (sut/on-error (juxt ex-message ex-data))))))
 
 (deftest mapping-tests
   (testing "mapping success"
@@ -57,7 +57,7 @@
     (is (= [1 2 3]
           (sut/handle-errors
            (fn [errors] (reset! handled-errors errors))
-           {::dm-schema/errors [:a :b :c]
-            ::dm-schema/successes [1 2 3]})))
+           {:errors [:a :b :c]
+            :successes [1 2 3]})))
     (is (= [:a :b :c]
            @handled-errors))))

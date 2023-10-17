@@ -5,28 +5,52 @@
 
 (defn handle-errors-xf
   [handler]
-  (fn [next]
+  (fn [rf]
     (fn
-      ([] (next))
-      ([result] (next result))
+      ([] (rf))
+      ([result] (rf result))
       ([result input]
        (utils/resolve
         (fn [error] (handler error) result)
-        (fn [success] (next result success))
+        (fn [success] (rf result success))
+        input)))))
+
+(defn handle-and-continue-xf
+  [handler xf]
+  (fn [rf]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result input]
+       (utils/resolve
+        (fn [error] (handler error) result)
+        (fn [success] ((xf rf) result success))
         input)))))
 
 (defn carry-errors-xf
   [xf]
-  (fn [next]
+  (fn [rf]
     (fn
-      ([] (next))
-      ([result] (next result))
+      ([] (rf))
+      ([result] (rf result))
       ([result input]
        (utils/resolve
-        (fn [error] (next result (dm-schema/as-error error)))
-        (fn [success] ((xf next) result success))
+        (fn [error] (rf result (dm-schema/as-error error)))
+        (fn [success] ((xf rf) result success))
         input)))))
 
 (defn chain
   [& xfs]
   (apply comp (map carry-errors-xf xfs)))
+
+(s/defn collect :- dm-schema/GroupedResults
+  [& xfs]
+  (fn [coll]
+    (let [errors (transient [])
+          handler (handle-errors-xf (fn [e]
+                                      (conj! errors e)))
+          successes (into []
+                          (apply comp (interleave (cons handler xfs) (repeat handler)))
+                          coll)]
+      {:errors (persistent! errors)
+       :successes successes})))

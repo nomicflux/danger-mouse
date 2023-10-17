@@ -5,8 +5,8 @@
   {::error s/Any})
 
 (s/defschema GroupedResults
-  {::errors [s/Any]
-   ::successes [s/Any]})
+  {:errors [s/Any]
+   :successes [s/Any]})
 
 (s/defn as-error :- ErrorResult
   [x :- s/Any]

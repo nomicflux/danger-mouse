@@ -128,3 +128,25 @@
                          (dm-schema/as-error 2)
                          (dm-schema/as-error 3)
                          4])))))
+
+(deftest collect-test
+  (is (= {:errors [2 2 3]
+          :successes [50]}
+         ((sut/collect (map inc)
+                       (map (fn [x] (if (even? x)
+                                     (dm-schema/as-error x)
+                                     x)))
+                       (map (partial * 10)))
+          [1
+           (dm-schema/as-error 2)
+           (dm-schema/as-error 3)
+           4])))
+  (is (= {:errors [2]
+          :successes [10 30]}
+         ((sut/collect (map inc)
+                       (map (fn [x] (if (even? x)
+                                     (dm-schema/as-error x)
+                                     x)))
+                       (take 2)
+                       (map (partial * 10)))
+          (vec (range 10))))))

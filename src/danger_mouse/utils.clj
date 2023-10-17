@@ -8,9 +8,9 @@
          errors (transient [])
          successes (transient [])]
     (cond
-      (empty? all) {::dm-schema/errors (persistent! errors)
-                    ::dm-schema/successes (persistent! successes)}
-      (dm-schema/is-error? y) (recur ys (conj! errors (::dm-schema/error y)) successes)
+      (empty? all) {:errors (persistent! errors)
+                    :successes (persistent! successes)}
+      (dm-schema/is-error? y) (recur ys (conj! errors (dm-schema/get-error y)) successes)
       :else (recur ys errors (conj! successes y)))))
 
 (defn on-success
@@ -45,7 +45,7 @@
 
 (s/defn handle-errors :- [s/Any]
   [handler :- (s/=> (s/named (s/eq nil) 'Unit) [s/Any])
-   {::dm-schema/keys [errors successes]} :- dm-schema/GroupedResults]
+   {:keys [errors successes]} :- dm-schema/GroupedResults]
   (handler errors)
   successes)
 
