@@ -6,5 +6,6 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [prismatic/schema "1.4.1"]
                  [criterium "0.4.6"]]
-  :plugins [[jonase/eastwood "1.4.0"]]
+  :plugins [[jonase/eastwood "1.4.0"]
+            [lein-marginalia "0.9.1"]]
   :repl-options {:init-ns danger-mouse.catch-errors})
