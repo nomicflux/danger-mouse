@@ -38,9 +38,9 @@ successful results:
 ```clojure
 (let [collector (danger-mouse.transducers/collect 
                     (map inc)
-                    (map (fn [x] (if (even? x)
-                         (danger-mouse.schema/as-error x)
-                         x)))
+                    (map #(if (even? %)
+                              (danger-mouse.schema/as-error %)
+                              %)))
                     (take 2)
                     (map (partial * 10)))]
 
