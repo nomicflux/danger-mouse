@@ -36,14 +36,14 @@ errors and successes:
 Update other transducers to capture errors, then handle them while passing on 
 successful results:
 ```clojure
-(let [collector (danger-mouse.transducers/collect (map inc)
+(let [collector (danger-mouse.transducers/collect 
+                                      (map inc)
                                       (map (fn [x] (if (even? x)
                                                     (danger-mouse.schema/as-error x)
                                                     x)))
                                       (take 2)
                                       (map (partial * 10)))]
            (->> (range 10)
-                vec
                 collector
                 (danger-mouse.utils/handle-errors println)))
 
