@@ -2,6 +2,8 @@
 
 Error handling for processing pipelines of information in Clojure.
 
+The design 
+
 For API documentation, see: https://nomicflux.github.io/danger-mouse/
 
 ## Usage
@@ -19,8 +21,8 @@ Capture errors for reporting while continuing to process data:
              :error ....}]}
 ```
 
-Use `try-catch` as a function, then apply different functions over
-errors and successes:
+Use `try-catch` as a function, then `resolve` to apply different functions over
+errors and successes, respectively:
 ```clojure
 (->> (danger-mouse.macros/try-catch (throw (Exception. "Oops")))
      (danger-mouse.utils/resolve ex-message str))
@@ -33,7 +35,7 @@ errors and successes:
 > "1"
 ```
 
-Update other transducers to capture errors, then handle them while passing on 
+Update transducers to capture errors, then handle the errors while passing on 
 successful results:
 ```clojure
 (let [collector (danger-mouse.transducers/collect 
@@ -57,7 +59,7 @@ successful results:
 MIT License
 
 Copyright © 2021-2023 Michael Anderson
-
+  * [ ] 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

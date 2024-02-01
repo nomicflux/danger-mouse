@@ -12,6 +12,11 @@
   {:errors [s/Any]
    :successes [s/Any]})
 
+(s/defschema ProcessedError
+  {:error-msg s/Str
+   :error Throwable
+   :input s/Any})
+
 ;; ## Schema Utility Functions
 
 (s/defn as-error :- ErrorResult
@@ -32,3 +37,8 @@
    Preferable to destructuring manually."
   [{::keys [error]}]
   error)
+
+(defn WithErrors
+  [schema]
+  {:result schema
+   :errors [ProcessedError]})
