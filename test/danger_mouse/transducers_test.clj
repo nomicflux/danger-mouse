@@ -4,6 +4,42 @@
             [danger-mouse.schema :as dm-schema]
             [danger-mouse.utils :as utils]))
 
+(defn throw-on-even
+  [n]
+  (if (even? n)
+    (throw (ex-info "Even!" {:n n}))
+    n))
+
+(deftest contain-errors-xf
+  (testing "all successes"
+    (is (= [0 1 2 3 4]
+          (into []
+                sut/contain-errors-xf
+                (range 0 5)))))
+  (testing "all failures"
+    (is (= [(dm-schema/as-error {:error-msg "Even!", :input 0})
+            (dm-schema/as-error {:error-msg "Even!", :input 1})
+            (dm-schema/as-error {:error-msg "Even!", :input 2})
+            (dm-schema/as-error {:error-msg "Even!", :input 3})
+            (dm-schema/as-error {:error-msg "Even!", :input 4})]
+           (->> (range 0 5)
+                (into []
+                  (sut/chain sut/contain-errors-xf
+                             (map #(* % 2))
+                             (map throw-on-even)))
+                (map (partial utils/on-error #(dissoc % :error)))))))
+  (testing "mixed"
+    (is (= [(dm-schema/as-error {:error-msg "Even!", :input 0})
+            1
+            (dm-schema/as-error {:error-msg "Even!", :input 2})
+            3
+            (dm-schema/as-error {:error-msg "Even!", :input 4})]
+           (->> (range 0 5)
+                (into []
+                  (sut/chain sut/contain-errors-xf
+                             (map throw-on-even)))
+                (map (partial utils/on-error #(dissoc % :error))))))))
+
 (deftest handle-errors-xf
   (testing "all successes first"
     (let [errors (transient [])

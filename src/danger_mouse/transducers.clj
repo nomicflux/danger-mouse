@@ -6,8 +6,21 @@
             [danger-mouse.schema :as dm-schema]))
 
 ;; ## Transducers
-;; Caution, these functions are all experimental and do not always act as intended
-;; depending on the transducers applied.
+
+(def contain-errors-xf
+  "Like `danger-mouse.catch-errors#catch-errors`, but instead of collecting errors as it goes,
+   presents them in `danger-mouse` error format for later handling.
+   If further transducers are used, `chain` should be used to compose them."
+  (fn [rf]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result input] (try (rf result input)
+                           (catch Exception e
+                             (rf result
+                                 (dm-schema/as-error {:error-msg (.getMessage e)
+                                                      :error e
+                                                      :input input}))))))))
 
 (defn handle-errors-xf
   "Handle errors as part of the transduction process via `handler`, removing them

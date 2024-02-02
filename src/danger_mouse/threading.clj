@@ -1,6 +1,4 @@
-(ns danger-mouse.threading
-  (:require [danger-mouse.schema :as dm-schema]
-            [schema.core :as s]))
+(ns danger-mouse.threading)
 
 (defmacro update-errors->>
   [& body-and-coll]

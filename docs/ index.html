@@ -2865,7 +2865,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.2.0-SNAPSHOT</h2><br /><p>Transducer friendly error-handling in Clojure</p>
+</script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.2.0</h2><br /><p>Transducer friendly error-handling in Clojure</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.10.1</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">1.4.1</td></tr><tr><td class="dep-name">criterium</td><td class="dotted"><hr /></td><td class="dep-version">0.4.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#danger-mouse.catch-errors">danger-mouse.catch-errors</a></li><li><a href="#danger-mouse.transducers">danger-mouse.transducers</a></li><li><a href="#danger-mouse.schema">danger-mouse.schema</a></li><li><a href="#danger-mouse.utils">danger-mouse.utils</a></li><li><a href="#danger-mouse.threading">danger-mouse.threading</a></li><li><a href="#danger-mouse.macros">danger-mouse.macros</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.catch-errors" name="danger-mouse.catch-errors"><h1 class="project-name">danger-mouse.catch-errors</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Transducer Error Handling</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs"><p>Transducer to catch errors, capture additional info, and cache them as
@@ -2908,10 +2908,20 @@ net.brehaut.ClojureTools = (function (SH) {
   (:require [danger-mouse.utils :as utils]
             [schema.core :as s]
             [danger-mouse.schema :as dm-schema]))</pre></td></tr><tr><td class="docs"><h2>Transducers</h2>
-
-<p>Caution, these functions are all experimental and do not always act as intended
-depending on the transducers applied.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Handle errors as part of the transduction process via <code>handler</code>, removing them
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Like <code>danger-mouse.catch-errors#catch-errors</code>, but instead of collecting errors as it goes,
+   presents them in <code>danger-mouse</code> error format for later handling.
+   If further transducers are used, <code>chain</code> should be used to compose them.</p>
+</td><td class="codes"><pre class="brush: clojure">(def contain-errors-xf
+  (fn [rf]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result input] (try (rf result input)
+                           (catch Exception e
+                             (rf result
+                                 (dm-schema/as-error {:error-msg (.getMessage e)
+                                                      :error e
+                                                      :input input}))))))))</pre></td></tr><tr><td class="docs"><p>Handle errors as part of the transduction process via <code>handler</code>, removing them
    from later stages.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn handle-errors-xf
   [handler]
@@ -3061,9 +3071,7 @@ depending on the transducers applied.</p>
     (thunk)
     (catch Exception e
       {::dm-schema/error e})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.threading" name="danger-mouse.threading"><h1 class="project-name">danger-mouse.threading</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.threading
-  (:require [danger-mouse.schema :as dm-schema]
-            [schema.core :as s]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.threading)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro update-errors-&gt;&gt;
   [&amp; body-and-coll]
   (let [coll (last body-and-coll)
