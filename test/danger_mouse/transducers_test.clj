@@ -131,7 +131,7 @@
 
 (deftest collect-test
   (is (= {:errors [2 2 3]
-          :successes [50]}
+          :result [50]}
          ((sut/collect (map inc)
                        (map (fn [x] (if (even? x)
                                      (dm-schema/as-error x)
@@ -142,7 +142,7 @@
            (dm-schema/as-error 3)
            4])))
   (is (= {:errors [2]
-          :successes [10 30]}
+          :result [10 30]}
          (let [collector (sut/collect (map inc)
                                       (map (fn [x] (if (even? x)
                                                     (dm-schema/as-error x)

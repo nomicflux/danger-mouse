@@ -10,12 +10,17 @@
 
 (s/defschema GroupedResults
   {:errors [s/Any]
-   :successes [s/Any]})
+   :result [s/Any]})
 
 (s/defschema ProcessedError
   {:error-msg s/Str
    :error Throwable
    :input s/Any})
+
+(defn WithErrors
+  [schema]
+  {:errors [ProcessedError]
+   :result schema})
 
 ;; ## Schema Utility Functions
 
@@ -37,8 +42,3 @@
    Preferable to destructuring manually."
   [{::keys [error]}]
   error)
-
-(defn WithErrors
-  [schema]
-  {:result schema
-   :errors [ProcessedError]})

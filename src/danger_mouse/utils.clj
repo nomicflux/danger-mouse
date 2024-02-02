@@ -7,17 +7,17 @@
 ;; ## Collection Helper
 
 (s/defn collect-results-map :- dm-schema/GroupedResults
-  "Separate out errors and successes from a vector argument and return them
+  "Separate out errors and result from a vector argument and return them
    in a map."
   [xs :- [s/Any]]
   (loop [[y & ys :as all] xs
          errors (transient [])
-         successes (transient [])]
+         result (transient [])]
     (cond
       (empty? all) {:errors (persistent! errors)
-                    :successes (persistent! successes)}
-      (dm-schema/is-error? y) (recur ys (conj! errors (dm-schema/get-error y)) successes)
-      :else (recur ys errors (conj! successes y)))))
+                    :result (persistent! result)}
+      (dm-schema/is-error? y) (recur ys (conj! errors (dm-schema/get-error y)) result)
+      :else (recur ys errors (conj! result y)))))
 
 ;; ## Mapping functions
 
@@ -61,11 +61,11 @@
 
 (s/defn handle-errors :- [s/Any]
   "After using `collect-results-map` to group values, this function will handle the `errors`
-   portion using `handler` (which only produces side effects) and returns only the `successes`."
+   portion using `handler` (which only produces side effects) and returns only the `result`."
   [handler :- (s/=> (s/named (s/eq nil) 'Unit) [s/Any])
-   {:keys [errors successes]} :- dm-schema/GroupedResults]
+   {:keys [errors result]} :- dm-schema/GroupedResults]
   (handler errors)
-  successes)
+  result)
 
 (s/defn try-catch*
   "Function version of a try-catch block. The body must be provided as a thunk to delay processing.

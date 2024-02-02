@@ -21,7 +21,7 @@ Capture errors for reporting while continuing to process data:
              :error ....}]}
 ```
 
-Use `try-catch` as a function, then `resolve` to apply different functions over
+Use `try-catch`, then `resolve` to apply different functions over
 errors and successes, respectively:
 ```clojure
 (->> (danger-mouse.macros/try-catch (throw (Exception. "Oops")))
@@ -58,7 +58,7 @@ successful results:
 
 MIT License
 
-Copyright © 2021-2023 Michael Anderson
+Copyright © 2021-2024 Michael Anderson
   * [ ] 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

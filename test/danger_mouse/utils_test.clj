@@ -5,23 +5,23 @@
 
 (deftest collect-results-map-test
   (is (= {:errors []
-          :successes []}
+          :result []}
          (sut/collect-results-map [])))
-  (is (= {:successes [1 2 3]
+  (is (= {:result [1 2 3]
           :errors []}
          (sut/collect-results-map [1 2 3])))
-  (is (= {:successes [1 2 3]
+  (is (= {:result [1 2 3]
           :errors []}
          (sut/collect-results-map [1
                                    2
                                    3])))
   (is (= {:errors [1 2 3]
-          :successes []}
+          :result []}
          (sut/collect-results-map [(dm-schema/as-error 1)
                                    (dm-schema/as-error 2)
                                    (dm-schema/as-error 3)])))
   (is (= {:errors [1]
-          :successes [2 3]}
+          :result [2 3]}
          (sut/collect-results-map [(dm-schema/as-error 1)
                                    2
                                    3]))))
@@ -58,6 +58,6 @@
           (sut/handle-errors
            (fn [errors] (reset! handled-errors errors))
            {:errors [:a :b :c]
-            :successes [1 2 3]})))
+            :result [1 2 3]})))
     (is (= [:a :b :c]
            @handled-errors))))

@@ -68,8 +68,8 @@
     (let [errors (transient [])
           handler (handle-errors-xf (fn [e]
                                       (conj! errors e)))
-          successes (into []
-                          (apply comp (interleave (cons handler xfs) (repeat handler)))
-                          coll)]
+          result (into []
+                       (apply comp (interleave (cons handler xfs) (repeat handler)))
+                       coll)]
       {:errors (persistent! errors)
-       :successes successes})))
+       :result result})))
