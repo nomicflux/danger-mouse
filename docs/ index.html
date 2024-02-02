@@ -2882,14 +2882,27 @@ net.brehaut.ClojureTools = (function (SH) {
                                (vswap! errors conj {:error-msg (.getMessage e)
                                                     :error e
                                                     :input input})
-                               result)))))))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.</p>
+                               result)))))))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
+   Collection is first.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;
   [coll &amp; args]
-  (transduce (apply comp catch-errors args) conj [] coll))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
-   a transducer.</p>
+  (transduce (apply comp catch-errors args) conj [] coll))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
+   Collection is last.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;&gt;
+  [&amp; args-and-coll]
+  (let [coll (last args-and-coll)
+        args (drop-last args-and-coll)]
+    (apply catch-errors-&gt; coll args)))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
+   a transducer. Collection is first.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn transduce-&gt;
   [coll xform initial &amp; args]
-  (transduce (apply comp catch-errors args) xform initial coll))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.transducers" name="danger-mouse.transducers"><h1 class="project-name">danger-mouse.transducers</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Error Handling Transducers</h1>
+  (transduce (apply comp catch-errors args) xform initial coll))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
+   a transducer. Collection is last.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn transduce-&gt;&gt;
+  [xform initial &amp; args-and-coll]
+  (let [coll (last args-and-coll)
+        args (drop-last args-and-coll)]
+    (apply transduce-&gt; coll xform initial args)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.transducers" name="danger-mouse.transducers"><h1 class="project-name">danger-mouse.transducers</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Error Handling Transducers</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.transducers
   (:require [danger-mouse.utils :as utils]
@@ -3050,7 +3063,26 @@ depending on the transducers applied.</p>
       {::dm-schema/error e})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.threading" name="danger-mouse.threading"><h1 class="project-name">danger-mouse.threading</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.threading
   (:require [danger-mouse.schema :as dm-schema]
-            [schema.core :as s]))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.macros" name="danger-mouse.macros"><h1 class="project-name">danger-mouse.macros</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Macros</h1>
+            [schema.core :as s]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defmacro update-errors-&gt;&gt;
+  [&amp; body-and-coll]
+  (let [coll (last body-and-coll)
+        body (drop-last body-and-coll)]
+    `(update ~coll :errors #(-&gt;&gt; % ~@body))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defmacro update-result-&gt;&gt;
+  [&amp; body-and-coll]
+  (let [coll (last body-and-coll)
+        body (drop-last body-and-coll)]
+    `(update ~coll :result #(-&gt;&gt; % ~@body))))</pre></td></tr><tr><td class="docs"><p>TODO: This has the result in the first position, but still
+assumes that the functions passed in to update need the argument
+in last position. This has been my most common use case so far,
+but at least the naming needs to be cleared up.</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro update-errors-&gt;
+  [coll &amp; body]
+  `(update ~coll :errors #(-&gt;&gt; % ~@body)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defmacro update-result-&gt;
+  [coll &amp; body]
+  `(update ~coll :result #(-&gt;&gt; % ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.macros" name="danger-mouse.macros"><h1 class="project-name">danger-mouse.macros</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Macros</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.macros
   (:require [danger-mouse.utils :as utils]))</pre></td></tr><tr><td class="docs"><p>A try-catch block in function form. Uses a macro to delay resolution of the <code>body</code>.</p>

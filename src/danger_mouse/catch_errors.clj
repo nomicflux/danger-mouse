@@ -19,12 +19,29 @@
                                result)))))))
 
 (defn catch-errors->
-  "Helper function to separate out results from errors in a collection."
+  "Helper function to separate out results from errors in a collection.
+   Collection is first."
   [coll & args]
   (transduce (apply comp catch-errors args) conj [] coll))
 
+(defn catch-errors->>
+  "Helper function to separate out results from errors in a collection.
+   Collection is last."
+  [& args-and-coll]
+  (let [coll (last args-and-coll)
+        args (drop-last args-and-coll)]
+    (apply catch-errors-> coll args)))
+
 (defn transduce->
   "Helper function to separate out results from errors after applying
-   a transducer."
+   a transducer. Collection is first."
   [coll xform initial & args]
   (transduce (apply comp catch-errors args) xform initial coll))
+
+(defn transduce->>
+  "Helper function to separate out results from errors after applying
+   a transducer. Collection is last."
+  [xform initial & args-and-coll]
+  (let [coll (last args-and-coll)
+        args (drop-last args-and-coll)]
+    (apply transduce-> coll xform initial args)))
