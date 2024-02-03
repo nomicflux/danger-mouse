@@ -1,4 +1,4 @@
-(defproject org.clojars.nomicflux/danger-mouse "0.3.0-SNAPSHOT"
+(defproject org.clojars.nomicflux/danger-mouse "0.3.0"
   :description "Transducer friendly error-handling in Clojure"
   :url "https://github.com/nomicflux/danger-mouse"
   :license {:name "The MIT License"
@@ -15,6 +15,6 @@
              "deps,"
              "eastwood,"
              "test,"
-             "marg" "-f index.html,"
+             "marg" "-f" "index.html,"
              "uberjar"]}
   :repl-options {:init-ns danger-mouse.catch-errors})
