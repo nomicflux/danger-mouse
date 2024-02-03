@@ -72,30 +72,6 @@
            (transformed result success))
          input))))))
 
-(defn safe-partition-all
-  [^long n]
-  (fn [rf]
-    (let [a (atom [])
-          m (atom 0)]
-      (fn
-        ([]
-         (rf))
-        ([result]
-         (let [result (if (zero? @m)
-                        result
-                        (let [v @a]
-                          (unreduced (rf result v))))]
-           (rf result)))
-        ([result input]
-         (swap! a conj input)
-         (swap! m inc)
-         (if (= n @m)
-           (let [v @a]
-             (reset! a [])
-             (reset! m 0)
-             (rf result v))
-           result))))))
-
 ;; ## Transducer Helper Functions
 
 (defn chain
