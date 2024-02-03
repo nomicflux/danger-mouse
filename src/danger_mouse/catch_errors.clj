@@ -8,9 +8,16 @@
   (fn [rf]
     (let [errors (volatile! [])]
       (fn
-        ([] (rf))
-        ([result] {:result (rf result)
-                   :errors @errors})
+        ([] (try (rf)
+                 (catch Exception e
+                   nil)))
+        ([result] (try {:result (rf result)
+                        :errors @errors}
+                       (catch Exception e
+                         {:result result
+                          :errors (conj @errors {:error-msg (.getMessage e)
+                                                 :error e
+                                                 :input result})})))
         ([result input] (try (rf result input)
                              (catch Exception e
                                (vswap! errors conj {:error-msg (.getMessage e)
