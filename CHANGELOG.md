@@ -2,8 +2,8 @@
 This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
-### Changed
-- Add a new arity to `make-widget-async` to provide a different widget shape.
+### Added
+- `safe-channel` to set up transducers for channel error-catching & testing with async
 
 ## [0.3.0] - 2024-02-03
 ### Changed

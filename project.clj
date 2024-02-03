@@ -5,6 +5,7 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [prismatic/schema "1.4.1"]
+                 [org.clojure/core.async "1.6.681"]
                  [criterium "0.4.6"]]
   :plugins [[jonase/eastwood "1.4.0"]
             [lein-marginalia "0.9.1"]]
