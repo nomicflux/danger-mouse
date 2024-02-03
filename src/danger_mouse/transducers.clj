@@ -14,7 +14,11 @@
   (fn [rf]
     (fn
       ([] (rf))
-      ([result] (rf result))
+      ([result] (try (rf result)
+                     (catch Exception e
+                       (dm-schema/as-error {:error-msg (.getMessage e)
+                                            :error e
+                                            :input result}))))
       ([result input] (try (rf result input)
                            (catch Exception e
                              (rf result
@@ -54,14 +58,43 @@
   "Propogates errors as errors, and otherwise applies the marked transducer `xf`."
   [xf]
   (fn [rf]
-    (fn
-      ([] (rf))
-      ([result] (rf result))
-      ([result input]
-       (utils/resolve
-        (fn [error] (rf result (dm-schema/as-error error)))
-        (fn [success] ((xf rf) result success))
-        input)))))
+    (let [transformed (xf rf)]
+      (fn
+       ([]
+        (transformed))
+       ([result]
+        (transformed result))
+       ([result input]
+        (utils/resolve
+         (fn [error]
+           (rf result (dm-schema/as-error error)))
+         (fn [success]
+           (transformed result success))
+         input))))))
+
+(defn safe-partition-all
+  [^long n]
+  (fn [rf]
+    (let [a (atom [])
+          m (atom 0)]
+      (fn
+        ([]
+         (rf))
+        ([result]
+         (let [result (if (zero? @m)
+                        result
+                        (let [v @a]
+                          (unreduced (rf result v))))]
+           (rf result)))
+        ([result input]
+         (swap! a conj input)
+         (swap! m inc)
+         (if (= n @m)
+           (let [v @a]
+             (reset! a [])
+             (reset! m 0)
+             (rf result v))
+           result))))))
 
 ;; ## Transducer Helper Functions
 

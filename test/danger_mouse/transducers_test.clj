@@ -148,22 +148,153 @@
                            (dm-schema/as-error 3)
                            4]))))))
 
-
 (deftest chain-test
-  (is (= [(dm-schema/as-error 2)
-          (dm-schema/as-error 2)
-          (dm-schema/as-error 3)
-          50]
-         (into [] (into []
-                        (sut/chain (map inc)
-                                   (map (fn [x] (if (even? x)
-                                                 (dm-schema/as-error x)
-                                                 x)))
-                                   (map (partial * 10)))
-                        [1
-                         (dm-schema/as-error 2)
-                         (dm-schema/as-error 3)
-                         4])))))
+  (testing "map"
+    (is (= [(dm-schema/as-error 2)
+            (dm-schema/as-error 2)
+            (dm-schema/as-error 3)
+            50]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (map (fn [x] (if (even? x)
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (map (partial * 10)))
+                          [1
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           4])))))
+  (testing "filter"
+    (is (= [(dm-schema/as-error 4)
+            50]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (filter #(> % 3))
+                                     (map (fn [x] (if (even? x)
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (map (partial * 10)))
+                          [1
+                           2
+                           3
+                           4]))))
+    (is (= [(dm-schema/as-error 2)
+            (dm-schema/as-error 4)
+            50]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (map (fn [x] (if (even? x)
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (filter #(> % 3))
+                                     (map (partial * 10)))
+                          [1
+                           2
+                           3
+                           4]))))
+    (is (= [(dm-schema/as-error 2)
+            (dm-schema/as-error 3)
+            50]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (filter #(> % 3))
+                                     (map (fn [x] (if (even? x)
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (map (partial * 10)))
+                          [1
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           4])))))
+  (testing "partition-all"
+    (is (= [20
+            (dm-schema/as-error 3)
+            40
+            50
+            (dm-schema/as-error 6)]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (partition-all 2)
+                                     (mapcat identity)
+                                     (map (fn [x] (if (zero? (mod x 3))
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (map (partial * 10)))
+                          [1
+                           2
+                           3
+                           4
+                           5]))))
+    (is (= [(dm-schema/as-error 2)
+            (dm-schema/as-error 3)
+            20
+            50
+            (dm-schema/as-error 6)]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (partition-all 2)
+                                     (mapcat identity)
+                                     (map (fn [x] (if (zero? (mod x 3))
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (map (partial * 10)))
+                          [1
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           4
+                           5]))))
+    (is (= [(dm-schema/as-error 3)
+            20
+            40
+            (dm-schema/as-error 6)
+            50]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (map (fn [x] (if (zero? (mod x 3))
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (partition-all 2)
+                                     (mapcat identity)
+                                     (map (partial * 10)))
+                          [1
+                           2
+                           3
+                           4
+                           5]))))
+    (is (= [(dm-schema/as-error 2)
+            (dm-schema/as-error 3)
+            20
+            50
+            (dm-schema/as-error 6)]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (map (fn [x] (if (zero? (mod x 3))
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (partition-all 2)
+                                     (mapcat identity)
+                                     (map (partial * 10)))
+                          [1
+                           (dm-schema/as-error 2)
+                           (dm-schema/as-error 3)
+                           4
+                           5]))))
+    (is (= [(dm-schema/as-error 3)
+            [20 40]
+            (dm-schema/as-error 6)
+            [50]]
+           (into [] (into []
+                          (sut/chain (map inc)
+                                     (map (fn [x] (if (zero? (mod x 3))
+                                                   (dm-schema/as-error x)
+                                                   x)))
+                                     (map (partial * 10))
+                                     (partition-all 2))
+                          [1
+                           2
+                           3
+                           4
+                           5]))))))
 
 (deftest collect-test
   (is (= {:errors [2 2 3]

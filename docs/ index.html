@@ -2865,7 +2865,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.2.0</h2><br /><p>Transducer friendly error-handling in Clojure</p>
+</script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.3.0-SNAPSHOT</h2><br /><p>Transducer friendly error-handling in Clojure</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.10.1</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">1.4.1</td></tr><tr><td class="dep-name">criterium</td><td class="dotted"><hr /></td><td class="dep-version">0.4.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#danger-mouse.catch-errors">danger-mouse.catch-errors</a></li><li><a href="#danger-mouse.transducers">danger-mouse.transducers</a></li><li><a href="#danger-mouse.schema">danger-mouse.schema</a></li><li><a href="#danger-mouse.utils">danger-mouse.utils</a></li><li><a href="#danger-mouse.threading">danger-mouse.threading</a></li><li><a href="#danger-mouse.macros">danger-mouse.macros</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.catch-errors" name="danger-mouse.catch-errors"><h1 class="project-name">danger-mouse.catch-errors</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Transducer Error Handling</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs"><p>Transducer to catch errors, capture additional info, and cache them as
@@ -2874,9 +2874,16 @@ net.brehaut.ClojureTools = (function (SH) {
   (fn [rf]
     (let [errors (volatile! [])]
       (fn
-        ([] (rf))
-        ([result] {:result (rf result)
-                   :errors @errors})
+        ([] (try (rf)
+                 (catch Exception e
+                   nil)))
+        ([result] (try {:result (rf result)
+                        :errors @errors}
+                       (catch Exception e
+                         {:result result
+                          :errors (conj @errors {:error-msg (.getMessage e)
+                                                 :error e
+                                                 :input result})})))
         ([result input] (try (rf result input)
                              (catch Exception e
                                (vswap! errors conj {:error-msg (.getMessage e)
@@ -2915,7 +2922,11 @@ net.brehaut.ClojureTools = (function (SH) {
   (fn [rf]
     (fn
       ([] (rf))
-      ([result] (rf result))
+      ([result] (try (rf result)
+                     (catch Exception e
+                       (dm-schema/as-error {:error-msg (.getMessage e)
+                                            :error e
+                                            :input result}))))
       ([result input] (try (rf result input)
                            (catch Exception e
                              (rf result
@@ -2949,14 +2960,42 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn carry-errors-xf
   [xf]
   (fn [rf]
-    (fn
-      ([] (rf))
-      ([result] (rf result))
-      ([result input]
-       (utils/resolve
-        (fn [error] (rf result (dm-schema/as-error error)))
-        (fn [success] ((xf rf) result success))
-        input)))))</pre></td></tr><tr><td class="docs"><h2>Transducer Helper Functions</h2>
+    (let [transformed (xf rf)]
+      (fn
+       ([]
+        (transformed))
+       ([result]
+        (transformed result))
+       ([result input]
+        (utils/resolve
+         (fn [error]
+           (rf result (dm-schema/as-error error)))
+         (fn [success]
+           (transformed result success))
+         input))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn safe-partition-all
+  [^long n]
+  (fn [rf]
+    (let [a (atom [])
+          m (atom 0)]
+      (fn
+        ([]
+         (rf))
+        ([result]
+         (let [result (if (zero? @m)
+                        result
+                        (let [v @a]
+                          (unreduced (rf result v))))]
+           (rf result)))
+        ([result input]
+         (swap! a conj input)
+         (swap! m inc)
+         (if (= n @m)
+           (let [v @a]
+             (reset! a [])
+             (reset! m 0)
+             (rf result v))
+           result))))))</pre></td></tr><tr><td class="docs"><h2>Transducer Helper Functions</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Takes a splat of transducers <code>xfs</code> and wraps them to carry errors forward and
    otherwise act on values as normal. As no grouping is necessary, this can be used
    on arbitrary collections, including streams and infinite lists.</p>
