@@ -81,10 +81,10 @@
   [& xfs]
   (apply comp (map carry-errors-xf xfs)))
 
+;; Takes a splat of transducers `xfs`. Any errors encountered will be thrown
+;; into a side channel `errors` and returned as part of a `GroupedResults`.
+;; Blocks until transduction is complete, so not appropriate for streaming.
 (s/defn collect :- dm-schema/GroupedResults
-  "Takes a splat of transducers `xfs`. Any errors encountered will be thrown
-   into a side channel `errors` and returned as part of a `GroupedResults`.
-   Blocks until transduction is complete, so not appropriate for streaming."
   [& xfs]
   (fn [coll]
     (let [errors (transient [])

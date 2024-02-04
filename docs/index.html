@@ -2978,11 +2978,10 @@ net.brehaut.ClojureTools = (function (SH) {
    on arbitrary collections, including streams and infinite lists.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn chain
   [&amp; xfs]
-  (apply comp (map carry-errors-xf xfs)))</pre></td></tr><tr><td class="docs">
+  (apply comp (map carry-errors-xf xfs)))</pre></td></tr><tr><td class="docs"><p>Takes a splat of transducers <code>xfs</code>. Any errors encountered will be thrown
+into a side channel <code>errors</code> and returned as part of a <code>GroupedResults</code>.
+Blocks until transduction is complete, so not appropriate for streaming.</p>
 </td><td class="codes"><pre class="brush: clojure">(s/defn collect :- dm-schema/GroupedResults
-  &quot;Takes a splat of transducers `xfs`. Any errors encountered will be thrown
-   into a side channel `errors` and returned as part of a `GroupedResults`.
-   Blocks until transduction is complete, so not appropriate for streaming.&quot;
   [&amp; xfs]
   (fn [coll]
     (let [errors (transient [])
@@ -3005,24 +3004,22 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(s/defschema ProcessedError
   {:error-msg s/Str
    :error Throwable
-   :input s/Any})</pre></td></tr><tr><td class="docs">
+   :input s/Any})</pre></td></tr><tr><td class="docs"><p>Used to show that a result of <code>schema</code> can now be accompanied with <code>ProcessedError</code>s.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn WithErrors
   [schema]
   {:errors [ProcessedError]
    :result schema})</pre></td></tr><tr><td class="docs"><h2>Schema Utility Functions</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Format any value as an error.
+Preferable to using the keyword manually, but the tools in utils are preferred
+over explicitly creating errors.</p>
 </td><td class="codes"><pre class="brush: clojure">(s/defn as-error :- ErrorResult
-  &quot;Format any value as an error.
-   Preferable to using the keyword manually, but the tools in utils are preferred
-   over explicitly creating errors.&quot;
   [x :- s/Any]
-  {::error x})</pre></td></tr><tr><td class="docs">
+  {::error x})</pre></td></tr><tr><td class="docs"><p>Check whether a value is an error.
+Preferable to checking the keyword manually.</p>
 </td><td class="codes"><pre class="brush: clojure">(s/defn is-error? :- s/Bool
-  &quot;Check whether a value is an error.
-   Preferable to checking the keyword manually.&quot;
   [{::keys [error]}]
   (not (not error)))</pre></td></tr><tr><td class="docs"><p>Retrieve error value, which can be an Any (not necessarily an exception).
-   Preferable to destructuring manually.</p>
+Preferable to destructuring manually.</p>
 </td><td class="codes"><pre class="brush: clojure">(s/defn get-error
   [{::keys [error]}]
   error)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.utils" name="danger-mouse.utils"><h1 class="project-name">danger-mouse.utils</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Utility Functions</h1>
@@ -3087,12 +3084,16 @@ net.brehaut.ClojureTools = (function (SH) {
     (thunk)
     (catch Exception e
       {::dm-schema/error e})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.threading" name="danger-mouse.threading"><h1 class="project-name">danger-mouse.threading</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.threading)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.threading)</pre></td></tr><tr><td class="docs"><p>Update the <code>errors</code> of a <code>GroupedResult</code> or a <code>WithErrors</code>. Takes the
+   <code>coll</code> in the last position, and a <code>body</code> that threads <code>errors</code> in
+   the last position.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro update-errors-&gt;&gt;
   [&amp; body-and-coll]
   (let [coll (last body-and-coll)
         body (drop-last body-and-coll)]
-    `(update ~coll :errors #(-&gt;&gt; % ~@body))))</pre></td></tr><tr><td class="docs">
+    `(update ~coll :errors #(-&gt;&gt; % ~@body))))</pre></td></tr><tr><td class="docs"><p>Update the <code>result</code> of a <code>GroupedResult</code> or a <code>WithErrors</code>. Takes the
+   <code>coll</code> in the last position, and a <code>body</code> that threads <code>result</code> in
+   the last position.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro update-result-&gt;&gt;
   [&amp; body-and-coll]
   (let [coll (last body-and-coll)
@@ -3101,9 +3102,14 @@ net.brehaut.ClojureTools = (function (SH) {
 assumes that the functions passed in to update need the argument
 in last position. This has been my most common use case so far,
 but at least the naming needs to be cleared up.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Update the <code>errors</code> of a <code>GroupedResult</code> or a <code>WithErrors</code>. Takes the
+   <code>coll</code> in the first position, and a <code>body</code> that threads <code>errors</code> in
+   the last position.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro update-errors-&gt;
   [coll &amp; body]
-  `(update ~coll :errors #(-&gt;&gt; % ~@body)))</pre></td></tr><tr><td class="docs">
+  `(update ~coll :errors #(-&gt;&gt; % ~@body)))</pre></td></tr><tr><td class="docs"><p>Update the <code>result</code> of a <code>GroupedResult</code> or a <code>WithErrors</code>. Takes the
+   <code>coll</code> in the first position, and a <code>body</code> that threads <code>result</code> in
+   the last position.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro update-result-&gt;
   [coll &amp; body]
   `(update ~coll :result #(-&gt;&gt; % ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.macros" name="danger-mouse.macros"><h1 class="project-name">danger-mouse.macros</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Macros</h1>
