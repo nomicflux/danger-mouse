@@ -91,4 +91,33 @@
               3
               (dm-schema/as-error {:error-msg "Even!", :input 4})]
              (->> c (async/into []) async/<!!
+                  (map (partial dm-utils/on-error #(dissoc % :error)))))))
+    ;; TODO: This test result is highly unfortunate - errors after a partition-all
+    ;; will throw out everything in that partition after the error. Tracked in issue #1.
+    (let [c (sut/safe-channel 1 (partition-all 2) (mapcat identity) (map throw-on-even))]
+      (async/onto-chan!! c (range 5))
+      (is (= [(dm-schema/as-error {:error-msg "Even!", :input 1})
+              (dm-schema/as-error {:error-msg "Even!", :input 3})]
+             (->> c (async/into []) async/<!!
+                  (map (partial dm-utils/on-error #(dissoc % :error)))))))
+    (let [c (sut/safe-channel 1 (map inc) (partition-all 2) (mapcat identity) (map throw-on-even))]
+      (async/onto-chan!! c (range 5))
+      (is (= [1
+              (dm-schema/as-error {:error-msg "Even!", :input 1})
+              3
+              (dm-schema/as-error {:error-msg "Even!", :input 3})
+              5]
+             (->> c (async/into []) async/<!!
+                  (map (partial dm-utils/on-error #(dissoc % :error)))))))
+    (let [c (sut/safe-channel 1 (partition-all 2) (mapcat identity)
+                              (map (fn [x]
+                                     (when (zero? (mod x 3))
+                                       (throw (ex-info "Threven!" {:n x})))
+                                     x)))]
+      (async/onto-chan!! c (range 5))
+      (is (= [(dm-schema/as-error {:error-msg "Threven!", :input 1})
+              2
+              (dm-schema/as-error {:error-msg "Threven!", :input 3})
+              4]
+             (->> c (async/into []) async/<!!
                   (map (partial dm-utils/on-error #(dissoc % :error)))))))))
