@@ -2,8 +2,10 @@
 
 (ns danger-mouse.transducers
   (:require [danger-mouse.utils :as utils]
+            [clojure.string :as str]
             [schema.core :as s]
-            [danger-mouse.schema :as dm-schema]))
+            [danger-mouse.schema :as dm-schema]
+            [clojure.string :as str]))
 
 ;; ## Transducers
 
@@ -81,10 +83,10 @@
   [& xfs]
   (apply comp (map carry-errors-xf xfs)))
 
-;; Takes a splat of transducers `xfs`. Any errors encountered will be thrown
-;; into a side channel `errors` and returned as part of a `GroupedResults`.
-;; Blocks until transduction is complete, so not appropriate for streaming.
-(s/defn collect :- dm-schema/GroupedResults
+(defn collect
+   "Takes a splat of transducers `xfs`. Any errors encountered will be thrown
+    into a side channel `errors` and returned as part of a `GroupedResults`.
+    Blocks until transduction is complete, so not appropriate for streaming."
   [& xfs]
   (fn [coll]
     (let [errors (transient [])

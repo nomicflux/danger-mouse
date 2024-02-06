@@ -2,6 +2,12 @@
 
 (ns danger-mouse.catch-errors)
 
+(defn process-error
+  [error input]
+  {:error-msg (ex-message error)
+   :error error
+   :input input})
+
 (def catch-errors
   "Transducer to catch errors, capture additional info, and cache them as
    DM errors in a side channel that will be returned at the end of the reduction."
@@ -10,26 +16,31 @@
       (fn
         ([] (try (rf)
                  (catch Exception e
-                   nil)))
+                   {:result nil
+                    :errors (conj @errors (process-error e nil))})))
         ([result] (try {:result (rf result)
                         :errors @errors}
                        (catch Exception e
                          {:result result
-                          :errors (conj @errors {:error-msg (.getMessage e)
-                                                 :error e
-                                                 :input result})})))
+                          :errors (conj @errors (process-error e result))})))
         ([result input] (try (rf result input)
                              (catch Exception e
-                               (vswap! errors conj {:error-msg (.getMessage e)
-                                                    :error e
-                                                    :input input})
+                               (vswap! errors conj (process-error e input))
                                result)))))))
+
+(defn errors-coll?
+  [coll]
+  (and (map? coll) (= (set (keys coll)) #{:result :errors})))
 
 (defn catch-errors->
   "Helper function to separate out results from errors in a collection.
    Collection is first."
   [coll & args]
-  (transduce (apply comp catch-errors args) conj [] coll))
+  (let [start (if (errors-coll? coll) (:result coll) coll)
+        {new-result :result new-errors :errors}
+        (transduce (apply comp catch-errors args) conj [] start)]
+    {:result new-result
+     :errors (into (or (:errors coll) []) new-errors)}))
 
 (defn catch-errors->>
   "Helper function to separate out results from errors in a collection.
@@ -43,7 +54,12 @@
   "Helper function to separate out results from errors after applying
    a transducer. Collection is first."
   [coll xform initial & args]
-  (transduce (apply comp catch-errors args) xform initial coll))
+  (let [start (if (errors-coll? coll) (:result coll) coll)
+        {new-result :result
+         new-errors :errors}
+        (transduce (apply comp catch-errors args) xform initial start)]
+    {:result new-result
+     :errors (into (or (:errors coll) []) new-errors)}))
 
 (defn transduce->>
   "Helper function to separate out results from errors after applying

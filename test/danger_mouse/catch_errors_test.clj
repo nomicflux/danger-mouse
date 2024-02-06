@@ -95,6 +95,29 @@
            {:error-msg "Even!" :input 6}
            {:error-msg "Even!" :input 8}]}
          (-> (sut/catch-errors-> (range 0 10) (map throw-on-even))
+             (update :errors (partial map #(dissoc % :error))))))
+  (is (= {:result [1 3 5 7 9]
+          :errors
+          [{:error-msg "Even!" :input 0}
+           {:error-msg "Even!" :input 2}
+           {:error-msg "Even!" :input 4}
+           {:error-msg "Even!" :input 6}
+           {:error-msg "Even!" :input 8}]}
+         (-> (sut/catch-errors-> {:result (range 0 10)
+                                  :errors []}
+                                 (map throw-on-even))
+             (update :errors (partial map #(dissoc % :error))))))
+  (is (= {:result [1 3 5 7 9]
+          :errors
+          [{:error-msg "Other error" :input 876}
+           {:error-msg "Even!" :input 0}
+           {:error-msg "Even!" :input 2}
+           {:error-msg "Even!" :input 4}
+           {:error-msg "Even!" :input 6}
+           {:error-msg "Even!" :input 8}]}
+         (-> (sut/catch-errors-> {:result (range 0 10)
+                                  :errors [{:error-msg "Other error" :input 876}]}
+                                 (map throw-on-even))
              (update :errors (partial map #(dissoc % :error)))))))
 
 (deftest catch-errors->>-test
@@ -126,6 +149,41 @@
            {:error-msg "Even!" :input 7}
            {:error-msg "Even!" :input 9}]}
          (-> (sut/transduce-> (range 0 10)
+                             (completing
+                              (fn [x y]
+                                (when (even? y)
+                                  (throw (ex-info "Even!" {:n y})))
+                                (+ x y)))
+                              0
+                              (map inc))
+             (update :errors (partial map #(dissoc % :error))))))
+  (is (= {:result 25
+          :errors
+          [{:error-msg "Even!" :input 1}
+           {:error-msg "Even!" :input 3}
+           {:error-msg "Even!" :input 5}
+           {:error-msg "Even!" :input 7}
+           {:error-msg "Even!" :input 9}]}
+         (-> (sut/transduce-> {:result (range 0 10)
+                               :errors []}
+                             (completing
+                              (fn [x y]
+                                (when (even? y)
+                                  (throw (ex-info "Even!" {:n y})))
+                                (+ x y)))
+                              0
+                              (map inc))
+             (update :errors (partial map #(dissoc % :error))))))
+  (is (= {:result 25
+          :errors
+          [{:error-msg "Other error", :input 975}
+           {:error-msg "Even!" :input 1}
+           {:error-msg "Even!" :input 3}
+           {:error-msg "Even!" :input 5}
+           {:error-msg "Even!" :input 7}
+           {:error-msg "Even!" :input 9}]}
+         (-> (sut/transduce-> {:result (range 0 10)
+                               :errors [{:error-msg "Other error" :input 975}]}
                              (completing
                               (fn [x y]
                                 (when (even? y)

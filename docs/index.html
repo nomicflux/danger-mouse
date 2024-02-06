@@ -2868,7 +2868,12 @@ net.brehaut.ClojureTools = (function (SH) {
 </script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.3.1-SNAPSHOT</h2><br /><p>Transducer friendly error-handling in Clojure</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.10.1</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">1.4.1</td></tr><tr><td class="dep-name">org.clojure/core.async</td><td class="dotted"><hr /></td><td class="dep-version">1.6.681</td></tr><tr><td class="dep-name">criterium</td><td class="dotted"><hr /></td><td class="dep-version">0.4.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#danger-mouse.catch-errors">danger-mouse.catch-errors</a></li><li><a href="#danger-mouse.transducers">danger-mouse.transducers</a></li><li><a href="#danger-mouse.schema">danger-mouse.schema</a></li><li><a href="#danger-mouse.utils">danger-mouse.utils</a></li><li><a href="#danger-mouse.threading">danger-mouse.threading</a></li><li><a href="#danger-mouse.macros">danger-mouse.macros</a></li><li><a href="#danger-mouse.async">danger-mouse.async</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.catch-errors" name="danger-mouse.catch-errors"><h1 class="project-name">danger-mouse.catch-errors</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Transducer Error Handling</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs"><p>Transducer to catch errors, capture additional info, and cache them as
+</td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn process-error
+  [error input]
+  {:error-msg (ex-message error)
+   :error error
+   :input input})</pre></td></tr><tr><td class="docs"><p>Transducer to catch errors, capture additional info, and cache them as
    DM errors in a side channel that will be returned at the end of the reduction.</p>
 </td><td class="codes"><pre class="brush: clojure">(def catch-errors
   (fn [rf]
@@ -2876,24 +2881,28 @@ net.brehaut.ClojureTools = (function (SH) {
       (fn
         ([] (try (rf)
                  (catch Exception e
-                   nil)))
+                   {:result nil
+                    :errors (conj @errors (process-error e nil))})))
         ([result] (try {:result (rf result)
                         :errors @errors}
                        (catch Exception e
                          {:result result
-                          :errors (conj @errors {:error-msg (.getMessage e)
-                                                 :error e
-                                                 :input result})})))
+                          :errors (conj @errors (process-error e result))})))
         ([result input] (try (rf result input)
                              (catch Exception e
-                               (vswap! errors conj {:error-msg (.getMessage e)
-                                                    :error e
-                                                    :input input})
-                               result)))))))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
+                               (vswap! errors conj (process-error e input))
+                               result)))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn errors-coll?
+  [coll]
+  (and (map? coll) (= (set (keys coll)) #{:result :errors})))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
    Collection is first.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;
   [coll &amp; args]
-  (transduce (apply comp catch-errors args) conj [] coll))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
+  (let [start (if (errors-coll? coll) (:result coll) coll)
+        {new-result :result new-errors :errors}
+        (transduce (apply comp catch-errors args) conj [] start)]
+    {:result new-result
+     :errors (into (or (:errors coll) []) new-errors)}))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
    Collection is last.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;&gt;
   [&amp; args-and-coll]
@@ -2903,7 +2912,12 @@ net.brehaut.ClojureTools = (function (SH) {
    a transducer. Collection is first.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn transduce-&gt;
   [coll xform initial &amp; args]
-  (transduce (apply comp catch-errors args) xform initial coll))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
+  (let [start (if (errors-coll? coll) (:result coll) coll)
+        {new-result :result
+         new-errors :errors}
+        (transduce (apply comp catch-errors args) xform initial start)]
+    {:result new-result
+     :errors (into (or (:errors coll) []) new-errors)}))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
    a transducer. Collection is last.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn transduce-&gt;&gt;
   [xform initial &amp; args-and-coll]
@@ -2913,8 +2927,10 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.transducers
   (:require [danger-mouse.utils :as utils]
+            [clojure.string :as str]
             [schema.core :as s]
-            [danger-mouse.schema :as dm-schema]))</pre></td></tr><tr><td class="docs"><h2>Transducers</h2>
+            [danger-mouse.schema :as dm-schema]
+            [clojure.string :as str]))</pre></td></tr><tr><td class="docs"><h2>Transducers</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Like <code>danger-mouse.catch-errors#catch-errors</code>, but instead of collecting errors as it goes,
    presents them in <code>danger-mouse</code> error format for later handling.
    If further transducers are used, <code>chain</code> should be used to compose them.</p>
@@ -2979,9 +2995,9 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn chain
   [&amp; xfs]
   (apply comp (map carry-errors-xf xfs)))</pre></td></tr><tr><td class="docs"><p>Takes a splat of transducers <code>xfs</code>. Any errors encountered will be thrown
-into a side channel <code>errors</code> and returned as part of a <code>GroupedResults</code>.
-Blocks until transduction is complete, so not appropriate for streaming.</p>
-</td><td class="codes"><pre class="brush: clojure">(s/defn collect :- dm-schema/GroupedResults
+    into a side channel <code>errors</code> and returned as part of a <code>GroupedResults</code>.
+    Blocks until transduction is complete, so not appropriate for streaming.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn collect
   [&amp; xfs]
   (fn [coll]
     (let [errors (transient [])
