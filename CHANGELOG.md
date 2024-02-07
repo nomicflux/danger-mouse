@@ -2,8 +2,13 @@
 This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.4.0] - 2024-02-07
 ### Added
 - `safe-channel` to set up transducers for channel error-catching & testing with async
+
+### Changed
+- The `catch-errors` namespace now will collapse nested errors/result maps
 
 ## [0.3.0] - 2024-02-03
 ### Changed
@@ -31,7 +36,8 @@ This change log follows the conventions of [keepachangelog.com](http://keepachan
 ### Added
 - First published release
 
-[Unreleased]: https://github.com/nomicflux/danger-mouse/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/nomicflux/danger-mouse/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/nomicflux/danger-mouse/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/nomicflux/danger-mouse/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/nomicflux/danger-mouse/compare/0.1.0...0.2.0
 
