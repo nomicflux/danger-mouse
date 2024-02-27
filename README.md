@@ -21,8 +21,29 @@ Capture errors for reporting while continuing to process data:
              :error ....}]}
 ```
 
-Use `try-catch`, then `resolve` to apply different functions over
-errors and successes, respectively:
+Error-handling functions work within threading contexts:
+``` clojure
+(->> (range 5)
+     (danger-mouse.catch-errors/catch-errors->> 
+       (map inc)
+       (filter even?)
+       (mapcat error-causing-function))
+     (danger-mouse.threading/update-result->> (map summary-function))
+     (danger-mouse.threading/update-errors->> (map #(dissoc % :error))))
+```
+
+For more generality, use `transduce->>` and `transduce->`:
+``` clojure
+(->> (range 5)
+     (danger-mouse.catch-errors/transduce->>
+       + 0
+       
+       (map inc)
+       (map error-causing-function)
+       (filter odd?)))
+```
+
+Use `try-catch`, then `resolve` to apply functions over errors and successes, respectively:
 ```clojure
 (->> (danger-mouse.macros/try-catch (throw (Exception. "Oops")))
      (danger-mouse.utils/resolve ex-message str))
@@ -42,7 +63,7 @@ successful results:
                     (map inc)
                     (map #(if (even? %)
                               (danger-mouse.schema/as-error %)
-                              %)))
+                              %))
                     (take 2)
                     (map (partial * 10)))]
 
