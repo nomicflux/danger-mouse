@@ -2865,7 +2865,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.4.0</h2><br /><p>Transducer friendly error-handling in Clojure</p>
+</script><title>org.clojars.nomicflux/danger-mouse -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/nomicflux/danger-mouse">org.clojars.nomicflux/danger-mouse</a></h1><h2 class="project-version">0.4.1-SNAPSHOT</h2><br /><p>Transducer friendly error-handling in Clojure</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.10.1</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">1.4.1</td></tr><tr><td class="dep-name">org.clojure/core.async</td><td class="dotted"><hr /></td><td class="dep-version">1.6.681</td></tr><tr><td class="dep-name">criterium</td><td class="dotted"><hr /></td><td class="dep-version">0.4.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#danger-mouse.catch-errors">danger-mouse.catch-errors</a></li><li><a href="#danger-mouse.transducers">danger-mouse.transducers</a></li><li><a href="#danger-mouse.schema">danger-mouse.schema</a></li><li><a href="#danger-mouse.utils">danger-mouse.utils</a></li><li><a href="#danger-mouse.threading">danger-mouse.threading</a></li><li><a href="#danger-mouse.macros">danger-mouse.macros</a></li><li><a href="#danger-mouse.async">danger-mouse.async</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.catch-errors" name="danger-mouse.catch-errors"><h1 class="project-name">danger-mouse.catch-errors</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Transducer Error Handling</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.catch-errors)</pre></td></tr><tr><td class="docs">
@@ -2894,21 +2894,7 @@ net.brehaut.ClojureTools = (function (SH) {
                                result)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn errors-coll?
   [coll]
-  (and (map? coll) (= (set (keys coll)) #{:result :errors})))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
-   Collection is first.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;
-  [coll &amp; args]
-  (let [start (if (errors-coll? coll) (:result coll) coll)
-        {new-result :result new-errors :errors}
-        (transduce (apply comp catch-errors args) conj [] start)]
-    {:result new-result
-     :errors (into (or (:errors coll) []) new-errors)}))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
-   Collection is last.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;&gt;
-  [&amp; args-and-coll]
-  (let [coll (last args-and-coll)
-        args (drop-last args-and-coll)]
-    (apply catch-errors-&gt; coll args)))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
+  (and (map? coll) (= (set (keys coll)) #{:result :errors})))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors after applying
    a transducer. Collection is first.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn transduce-&gt;
   [coll xform initial &amp; args]
@@ -2923,7 +2909,17 @@ net.brehaut.ClojureTools = (function (SH) {
   [xform initial &amp; args-and-coll]
   (let [coll (last args-and-coll)
         args (drop-last args-and-coll)]
-    (apply transduce-&gt; coll xform initial args)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.transducers" name="danger-mouse.transducers"><h1 class="project-name">danger-mouse.transducers</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Error Handling Transducers</h1>
+    (apply transduce-&gt; coll xform initial args)))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
+   Collection is first.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;
+  [coll &amp; args]
+  (apply transduce-&gt; coll conj [] args))</pre></td></tr><tr><td class="docs"><p>Helper function to separate out results from errors in a collection.
+   Collection is last.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn catch-errors-&gt;&gt;
+  [&amp; args-and-coll]
+  (let [coll (last args-and-coll)
+        args (drop-last args-and-coll)]
+    (apply catch-errors-&gt; coll args)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#danger-mouse.transducers" name="danger-mouse.transducers"><h1 class="project-name">danger-mouse.transducers</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Error Handling Transducers</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns danger-mouse.transducers
   (:require [danger-mouse.utils :as utils]
