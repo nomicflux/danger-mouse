@@ -2,8 +2,6 @@
 
 Error handling for processing pipelines of information in Clojure.
 
-The design 
-
 For API documentation, see: https://nomicflux.github.io/danger-mouse/
 
 ## Usage
