@@ -32,24 +32,6 @@
   [coll]
   (and (map? coll) (= (set (keys coll)) #{:result :errors})))
 
-(defn catch-errors->
-  "Helper function to separate out results from errors in a collection.
-   Collection is first."
-  [coll & args]
-  (let [start (if (errors-coll? coll) (:result coll) coll)
-        {new-result :result new-errors :errors}
-        (transduce (apply comp catch-errors args) conj [] start)]
-    {:result new-result
-     :errors (into (or (:errors coll) []) new-errors)}))
-
-(defn catch-errors->>
-  "Helper function to separate out results from errors in a collection.
-   Collection is last."
-  [& args-and-coll]
-  (let [coll (last args-and-coll)
-        args (drop-last args-and-coll)]
-    (apply catch-errors-> coll args)))
-
 (defn transduce->
   "Helper function to separate out results from errors after applying
    a transducer. Collection is first."
@@ -68,3 +50,17 @@
   (let [coll (last args-and-coll)
         args (drop-last args-and-coll)]
     (apply transduce-> coll xform initial args)))
+
+(defn catch-errors->
+  "Helper function to separate out results from errors in a collection.
+   Collection is first."
+  [coll & args]
+  (apply transduce-> coll conj [] args))
+
+(defn catch-errors->>
+  "Helper function to separate out results from errors in a collection.
+   Collection is last."
+  [& args-and-coll]
+  (let [coll (last args-and-coll)
+        args (drop-last args-and-coll)]
+    (apply catch-errors-> coll args)))
