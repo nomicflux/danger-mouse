@@ -26,7 +26,7 @@ Error-handling functions work within threading contexts:
        (map inc)
        (filter even?)
        (mapcat error-causing-function))
-     (danger-mouse.threading/update-result->> (map summary-function))
+     (danger-mouse.threading/update-result->> summary-function)
      (danger-mouse.threading/update-errors->> (map #(dissoc % :error))))
 ```
 
